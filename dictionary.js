@@ -12,6 +12,7 @@
     { id: 'home', nameVi: 'Ngôi nhà & Đồ chơi', nameEn: 'Home & Toys', icon: '🏠', color: '#E0E7FF' },
     { id: 'clothes', nameVi: 'Quần áo', nameEn: 'Clothes', icon: '👕', color: '#FAE8FF' },
     { id: 'actions', nameVi: 'Hoạt động', nameEn: 'Actions', icon: '🏃', color: '#DCFCE7' },
+    { id: 'time', nameVi: 'Thời gian & Ngày', nameEn: 'Time & Days', icon: '📅', color: '#E0F2FE' },
     { id: 'other', nameVi: 'Chủ đề khác', nameEn: 'General', icon: '✨', color: '#F1F5F9' }
   ];
 
@@ -346,11 +347,25 @@
       vi: ['chạy', 'nhảy', 'đi', 'đứng', 'ngồi', 'ngủ', 'ăn', 'uống', 'đọc', 'viết', 'vẽ', 'hát', 'múa', 'chơi', 'bơi', 'cười', 'khóc', 'nghe', 'nhìn'],
       en: ['walk', 'talk', 'speak', 'listen', 'look', 'watch', 'see', 'smile', 'laugh', 'cry', 'fly', 'climb', 'kick', 'throw', 'catch', 'open', 'close', 'cook', 'wash', 'clean'],
       fallbackEmoji: '🏃'
+    },
+    {
+      topic: 'time',
+      vi: ['ngày', 'hôm nay', 'ngày mai', 'hôm qua', 'tuần', 'tháng', 'năm', 'buổi sáng', 'buổi trưa', 'buổi chiều', 'buổi tối', 'ban đêm', 'thứ hai', 'thứ ba', 'thứ tư', 'thứ năm', 'thứ sáu', 'thứ bảy', 'chủ nhật', 'giờ', 'phút'],
+      en: ['time', 'today', 'tomorrow', 'yesterday', 'morning', 'afternoon', 'evening', 'night', 'week', 'month', 'year', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday', 'hour', 'minute'],
+      fallbackEmoji: '📅'
     }
   ];
 
   function normalizeText(str) {
     return (str || '').trim().toLowerCase().replace(/\s+/g, ' ');
+  }
+
+  function containsPhrase(text, phrase) {
+    if (!text || !phrase) return false;
+    const p = phrase.trim();
+    if (!p) return false;
+    const padded = ' ' + text.replace(/[.,!?;:/()"'-]+/g, ' ').replace(/\s+/g, ' ').trim() + ' ';
+    return padded.includes(' ' + p + ' ');
   }
 
   function autoClassifyWord(enInput, viInput) {
@@ -370,23 +385,23 @@
       };
     }
 
-    // 2. Partial word match in sticker catalog for better icon pick
+    // 2. Whole-word match in sticker catalog for better icon pick
+    const enTokens = en ? en.split(/[\s-]+/).filter(Boolean) : [];
     let matchedSticker = null;
     if (en || vi) {
       for (const item of STICKER_CATALOG) {
         const tokens = item.k.split(' ');
-        if ((en && tokens.includes(en)) || (vi && tokens.some((t) => t.length >= 2 && vi.includes(t)))) {
+        if ((en && (tokens.includes(en) || enTokens.some((t) => tokens.includes(t)))) || (vi && tokens.includes(vi))) {
           matchedSticker = item.e;
           break;
         }
       }
     }
 
-    // 3. Rule-based topic classification across EN & VI
-    const enTokens = en ? en.split(/[\s-]+/).filter(Boolean) : [];
+    // 3. Rule-based topic classification across EN & VI (word/phrase boundaries)
     for (const rule of TOPIC_KEYWORDS) {
       const hitEn = en && rule.en.some((kw) => en === kw || enTokens.includes(kw));
-      const hitVi = vi && rule.vi.some((kw) => vi.includes(kw));
+      const hitVi = vi && rule.vi.some((kw) => containsPhrase(vi, kw));
       if (hitEn || hitVi) {
         return {
           matched: false,
