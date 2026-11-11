@@ -305,7 +305,7 @@
     },
     {
       topic: 'food',
-      vi: ['quả ', 'trái ', 'bánh', 'cơm', 'thịt', 'sữa', 'nước', 'trà', 'cà phê', 'kem', 'kẹo', 'trứng', 'rau', 'củ ', 'mì', 'phở', 'cháo', 'canh', 'súp'],
+      vi: ['quả', 'trái', 'bánh', 'cơm', 'thịt', 'sữa', 'nước', 'trà', 'cà phê', 'kem', 'kẹo', 'trứng', 'rau', 'củ', 'mì', 'phở', 'cháo', 'canh', 'súp', 'chuối', 'táo', 'xoài', 'nho', 'dứa', 'dâu', 'dưa', 'cà rốt', 'cà chua', 'khoai', 'phô mai', 'xúc xích', 'pizza'],
       en: ['fruit', 'food', 'drink', 'soup', 'noodle', 'meat', 'pork', 'beef', 'cheese', 'butter', 'sugar', 'salt', 'tea', 'coffee', 'lemon', 'peach', 'pear', 'melon', 'corn', 'potato', 'onion', 'burger', 'sandwich'],
       fallbackEmoji: '🍽️'
     },
@@ -472,7 +472,7 @@
   function findSpellingSuggestions(input, limit = 3) {
     const w = normalizeText(input);
     if (!w || w.length < 3 || GRADE3_DICT[w]) return [];
-    const maxDist = w.length <= 4 ? 1 : 2;
+    const maxDist = w.length <= 4 ? 1 : w.length >= 8 ? 3 : 2;
     const candidates = [];
     for (const key of Object.keys(GRADE3_DICT)) {
       if (Math.abs(key.length - w.length) > maxDist) continue;
