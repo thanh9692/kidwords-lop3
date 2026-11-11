@@ -1475,16 +1475,41 @@
         'lion - con sư tử\nstrawberry - quả dâu tây\nruler - cái thước kẻ\nsunny - trời nắng\nteacher\nbicycle\nrobot';
     });
 
-    $('btn-bulk-analyze').addEventListener('click', () => {
+    $('btn-bulk-analyze').addEventListener('click', async () => {
+      const btn = $('btn-bulk-analyze');
       const parsed = parseBulkInput($('bulk-textarea').value);
-      ui.bulkParsed = parsed;
-      $('bulk-count-label').textContent = `${parsed.length} từ`;
       const list = $('bulk-preview-list');
+
       if (parsed.length === 0) {
+        ui.bulkParsed = [];
+        $('bulk-count-label').textContent = '0 từ';
         list.innerHTML = `<div class="empty-hint">Chưa có từ hợp lệ nào.</div>`;
         $('btn-bulk-save').disabled = true;
         return;
       }
+
+      const needTranslate = parsed.filter((p) => p.vi === '(chưa có nghĩa)');
+      if (needTranslate.length > 0) {
+        btn.disabled = true;
+        btn.textContent = '⏳ Đang dịch & phân loại...';
+        await Promise.all(
+          needTranslate.map(async (item) => {
+            const translated = await translateEnToViOnline(item.en);
+            if (translated) {
+              item.vi = translated;
+              const reCls = Dict.autoClassifyWord(item.en, translated);
+              item.topicId = reCls.topic;
+              item.imageType = reCls.colorHex ? 'color' : 'emoji';
+              item.imageValue = reCls.colorHex || reCls.emoji;
+            }
+          })
+        );
+        btn.disabled = false;
+        btn.textContent = '🔍 Phân tích & Phân loại chủ đề';
+      }
+
+      ui.bulkParsed = parsed;
+      $('bulk-count-label').textContent = `${parsed.length} từ`;
       list.innerHTML = parsed
         .map((p) => {
           const meta = getTopicMeta(p.topicId);
