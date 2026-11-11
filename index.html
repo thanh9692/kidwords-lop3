@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KidWords Lớp 3 — Flashcard Học Tiếng Anh Thông Minh</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Top Header -->
+    <header class="topbar">
+      <div class="brand" id="btn-go-home" role="button" tabindex="0">
+        <div class="brand-logo" aria-hidden="true">🦉</div>
+        <div>
+          <div class="brand-title">KidWords <span class="badge-grade">Lớp 3</span></div>
+          <div class="brand-sub">Học từ vựng khoa học &amp; vui nhộn</div>
+        </div>
+      </div>
+
+      <div class="topbar-stats">
+        <div class="stat-pill stat-streak" title="Chuỗi ngày học liên tiếp">
+          <span>🔥</span>
+          <strong id="stat-streak">0</strong>
+          <span class="stat-label">ngày</span>
+        </div>
+        <div class="stat-pill stat-stars" title="Số sao tích lũy">
+          <span>⭐</span>
+          <strong id="stat-stars">0</strong>
+          <span class="stat-label">sao</span>
+        </div>
+        <button class="btn-icon" id="btn-sound-toggle" title="Bật/Tắt hiệu ứng âm thanh" aria-label="Bật/Tắt hiệu ứng âm thanh">
+          🔊
+        </button>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="main-nav" aria-label="Điều hướng chính">
+      <button class="nav-tab active" data-view="library">
+        <span class="nav-ico">📚</span>
+        <span>Kho từ &amp; Chủ đề</span>
+      </button>
+      <button class="nav-tab" data-view="study">
+        <span class="nav-ico">🎮</span>
+        <span>Học &amp; Luyện tập</span>
+        <span class="nav-badge" id="due-nav-badge" hidden>0</span>
+      </button>
+      <button class="nav-tab" data-view="add">
+        <span class="nav-ico">➕</span>
+        <span>Thêm từ mới</span>
+      </button>
+      <button class="nav-tab" data-view="progress">
+        <span class="nav-ico">🏆</span>
+        <span>Tiến độ &amp; Phương pháp</span>
+      </button>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- VIEW 1: LIBRARY & TOPICS -->
+      <section id="view-library" class="view active">
+        <!-- Daily Review Hero Banner -->
+        <div class="hero-banner">
+          <div class="hero-left">
+            <div class="hero-kicker">🧠 Ôn tập thông minh (Spaced Repetition)</div>
+            <h1 id="hero-title">Hôm nay bé có <span id="due-count-hero">0</span> từ cần ôn!</h1>
+            <p id="hero-desc">Mục tiêu hôm nay: hoàn thành <strong id="daily-goal-text">0/10</strong> lượt học để giữ chuỗi ngày nhé.</p>
+            <div class="goal-bar-wrap">
+              <div class="goal-bar-fill" id="daily-goal-bar" style="width: 0%"></div>
+            </div>
+          </div>
+          <div class="hero-actions">
+            <button class="btn btn-primary btn-lg" id="btn-start-due">
+              🚀 Bắt đầu ôn ngay
+            </button>
+            <button class="btn btn-secondary" id="btn-quick-spell">
+              ✍️ Luyện viết từ (Chế độ 1)
+            </button>
+          </div>
+        </div>
+
+        <!-- Topics Grid -->
+        <div class="section-header">
+          <div>
+            <h2>🗂️ Bộ thẻ theo chủ đề</h2>
+            <p class="section-sub">Hệ thống tự động gom từ mới vào các chủ đề giúp não ghi nhớ theo mạng lưới.</p>
+          </div>
+          <div class="section-actions">
+            <button class="btn btn-outline btn-sm" id="btn-share-deck" title="Tạo đường link chứa các từ bạn mới thêm để gửi sang máy của bé">🔗 Gửi link bộ từ cho bé</button>
+            <button class="btn btn-outline btn-sm" id="btn-view-all-words">Xem tất cả từ</button>
+            <button class="btn btn-primary btn-sm" id="btn-goto-add">+ Thêm từ mới</button>
+          </div>
+        </div>
+
+        <div class="topics-grid" id="topics-grid"></div>
+
+        <!-- Selected Topic / Word List -->
+        <div class="word-list-panel" id="word-list-panel">
+          <div class="word-list-header">
+            <div class="word-list-title-wrap">
+              <h3 id="word-list-title">Tất cả từ vựng</h3>
+              <span class="pill-count" id="word-list-count">0 từ</span>
+            </div>
+            <div class="word-list-controls">
+              <input type="search" id="search-words" class="input-search" placeholder="🔍 Tìm tiếng Anh hoặc tiếng Việt..." />
+              <select id="filter-box" class="select-sm" title="Lọc theo mức độ nhớ">
+                <option value="all">Tất cả mức độ</option>
+                <option value="due">Cần ôn hôm nay</option>
+                <option value="1">Hộp 1 (Mới / Hay quên)</option>
+                <option value="2">Hộp 2 (Đang nhớ)</option>
+                <option value="3">Hộp 3 (Khá thuộc)</option>
+                <option value="4">Hộp 4 (Rất thuộc)</option>
+                <option value="5">Hộp 5 (Thành thạo 🌟)</option>
+              </select>
+              <button class="btn btn-primary btn-sm" id="btn-study-this-topic">🎮 Học chủ đề này</button>
+            </div>
+          </div>
+
+          <div class="cards-grid" id="cards-grid"></div>
+        </div>
+      </section>
+
+      <!-- VIEW 2: STUDY ARENA -->
+      <section id="view-study" class="view">
+        <!-- Study Setup Panel -->
+        <div id="study-setup" class="study-setup">
+          <div class="setup-header">
+            <h2>🎯 Chọn chế độ học phù hợp</h2>
+            <p>Khuyên dùng theo thứ tự khoa học: <strong>Lật thẻ → Nghe &amp; Chọn → Nhìn hình viết từ → Ghép cặp</strong>.</p>
+          </div>
+
+          <div class="setup-filters card-surface">
+            <div class="form-row-3">
+              <div class="form-group">
+                <label for="study-topic-select">Chủ đề học</label>
+                <select id="study-topic-select" class="input"></select>
+              </div>
+              <div class="form-group">
+                <label for="study-filter-select">Nhóm từ</label>
+                <select id="study-filter-select" class="input">
+                  <option value="smart">Ưu tiên từ cần ôn / chưa thuộc</option>
+                  <option value="all">Tất cả từ trong chủ đề</option>
+                  <option value="box12">Chỉ từ mới &amp; hay sai (Hộp 1-2)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="study-limit-select">Số từ mỗi lượt (Micro-learning)</label>
+                <select id="study-limit-select" class="input">
+                  <option value="5">5 từ (Nhanh gọn ~3 phút)</option>
+                  <option value="8" selected>8 từ (Chuẩn lớp 3)</option>
+                  <option value="12">12 từ (Thử thách)</option>
+                  <option value="999">Tất cả từ đã chọn</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4 Study Mode Cards -->
+          <div class="modes-grid">
+            <div class="mode-card mode-featured" data-mode="spell">
+              <div class="mode-badge">Chế độ yêu cầu #1</div>
+              <div class="mode-icon">✍️</div>
+              <h3>1. Nhìn hình &amp; nghĩa → Ghi chữ</h3>
+              <p>Hiện hình minh họa và nghĩa tiếng Việt. Bé tự điền chữ tiếng Anh theo 3 mức độ khó:</p>
+              <div class="difficulty-selector" id="setup-difficulty-pills">
+                <button type="button" class="diff-pill active" data-diff="easy">
+                  🌱 Dễ <span>(Gợi ý 2 chữ)</span>
+                </button>
+                <button type="button" class="diff-pill" data-diff="medium">
+                  🌿 Vừa <span>(Gợi ý 1 chữ)</span>
+                </button>
+                <button type="button" class="diff-pill" data-diff="hard">
+                  🔥 Khó <span>(Xóa hết chữ)</span>
+                </button>
+              </div>
+              <div class="input-style-row">
+                <label class="checkbox-inline">
+                  <input type="checkbox" id="opt-word-tiles" checked />
+                  <span>Hiện thêm các ô chữ cái để bấm chọn (phù hợp iPad/bé lớp 3)</span>
+                </label>
+              </div>
+              <button class="btn btn-primary btn-block btn-start-mode" data-mode="spell">
+                Bắt đầu luyện viết →
+              </button>
+            </div>
+
+            <div class="mode-card" data-mode="flashcard">
+              <div class="mode-icon">🃏</div>
+              <h3>2. Lật thẻ &amp; Nghe phát âm</h3>
+              <p>Học từ mới bằng đa giác quan: xem hình, nghe giọng đọc chuẩn &amp; giọng chậm, lật thẻ xem nghĩa và tự đánh giá mức nhớ.</p>
+              <button class="btn btn-secondary btn-block btn-start-mode" data-mode="flashcard">
+                Học bằng thẻ lật →
+              </button>
+            </div>
+
+            <div class="mode-card" data-mode="quiz">
+              <div class="mode-icon">🎧</div>
+              <h3>3. Nghe &amp; Nhìn hình chọn từ</h3>
+              <p>Luyện phản xạ nhận diện mặt chữ và âm thanh với 4 đáp án A/B/C/D trước khi chuyển sang tự viết.</p>
+              <button class="btn btn-secondary btn-block btn-start-mode" data-mode="quiz">
+                Làm trắc nghiệm →
+              </button>
+            </div>
+
+            <div class="mode-card" data-mode="match">
+              <div class="mode-icon">🧩</div>
+              <h3>4. Trò chơi Ghép cặp</h3>
+              <p>Nối hình minh họa + nghĩa tiếng Việt với từ tiếng Anh tương ứng. Vừa chơi vừa khắc sâu trí nhớ!</p>
+              <button class="btn btn-secondary btn-block btn-start-mode" data-mode="match">
+                Chơi ghép cặp →
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Active Study Session Stage -->
+        <div id="study-stage" class="study-stage" hidden>
+          <div class="stage-topbar">
+            <button class="btn btn-outline btn-sm" id="btn-exit-study">← Đổi chế độ</button>
+            <div class="stage-progress-wrap">
+              <div class="stage-progress-bar">
+                <div class="stage-progress-fill" id="stage-progress-fill" style="width: 0%"></div>
+              </div>
+              <span class="stage-progress-text" id="stage-progress-text">1 / 8</span>
+            </div>
+            <div class="stage-mode-controls" id="stage-mode-controls"></div>
+          </div>
+
+          <div class="stage-arena" id="stage-arena"></div>
+        </div>
+
+        <!-- Session Complete Summary -->
+        <div id="study-summary" class="study-summary card-surface" hidden>
+          <div class="summary-trophy">🏆</div>
+          <h2 id="summary-title">Tuyệt vời! Bé đã hoàn thành lượt học!</h2>
+          <p id="summary-subtitle"></p>
+          <div class="summary-metrics">
+            <div class="metric-box">
+              <div class="metric-val" id="sum-correct">0</div>
+              <div class="metric-lbl">Từ đúng</div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-val" id="sum-accuracy">100%</div>
+              <div class="metric-lbl">Độ chính xác</div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-val" id="sum-stars">+10 ⭐</div>
+              <div class="metric-lbl">Sao thưởng</div>
+            </div>
+          </div>
+          <div id="summary-mistakes-box" class="summary-mistakes" hidden>
+            <h4>📌 Từ cần chú ý ôn lại:</h4>
+            <div id="summary-mistakes-list" class="mistakes-chips"></div>
+          </div>
+          <div class="summary-actions">
+            <button class="btn btn-primary" id="btn-retry-mistakes" hidden>🔁 Ôn lại các từ vừa sai</button>
+            <button class="btn btn-primary" id="btn-play-again">🔄 Học lượt mới</button>
+            <button class="btn btn-outline" id="btn-back-setup">Về chọn chế độ</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 3: ADD NEW WORDS -->
+      <section id="view-add" class="view">
+        <div class="section-header">
+          <div>
+            <h2>➕ Thêm từ mới &amp; Tự phân loại chủ đề</h2>
+            <p class="section-sub">Nhập từ tiếng Anh, hệ thống tự gợi ý nghĩa tiếng Việt, hình minh họa và xếp vào đúng chủ đề!</p>
+          </div>
+          <div class="add-mode-tabs">
+            <button class="pill-tab active" data-addtab="single">Thêm từng từ</button>
+            <button class="pill-tab" data-addtab="bulk">Nhập nhanh nhiều từ</button>
+          </div>
+        </div>
+
+        <!-- Single Word Form -->
+        <div id="add-single-panel" class="add-grid">
+          <form id="form-add-word" class="card-surface add-form">
+            <div class="form-group">
+              <label for="inp-en">Từ tiếng Anh <span class="req">*</span></label>
+              <div class="input-with-btn">
+                <input type="text" id="inp-en" class="input input-lg" placeholder="Ví dụ: elephant, pencil, watermelon..." autocomplete="off" required />
+                <button type="button" class="btn btn-secondary btn-sm" id="btn-preview-speak" title="Nghe phát âm thử">🔊 Nghe</button>
+              </div>
+              <small class="hint-text" id="auto-detect-status">Gõ từ tiếng Anh để hệ thống tự tìm chủ đề, nghĩa &amp; hình minh họa.</small>
+            </div>
+
+            <div class="form-group">
+              <label for="inp-vi">Nghĩa tiếng Việt <span class="req">*</span></label>
+              <input type="text" id="inp-vi" class="input" placeholder="Ví dụ: con voi, cái bút chì..." required />
+            </div>
+
+            <div class="form-row-2">
+              <div class="form-group">
+                <label for="inp-topic">Chủ đề (Tự động nhận diện)</label>
+                <select id="inp-topic" class="input"></select>
+              </div>
+              <div class="form-group" id="custom-topic-wrap" hidden>
+                <label for="inp-custom-topic">Tên chủ đề mới</label>
+                <input type="text" id="inp-custom-topic" class="input" placeholder="Ví dụ: Thể thao, Nhạc cụ..." />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="inp-example">Câu ví dụ ngắn (tùy chọn)</label>
+              <input type="text" id="inp-example" class="input" placeholder="Ví dụ: The elephant is very big." />
+            </div>
+
+            <div class="form-group">
+              <label>Hình minh họa</label>
+              <div class="illustration-tools">
+                <button type="button" class="btn btn-outline btn-sm" id="btn-open-sticker-picker">🎨 Chọn Sticker</button>
+                <button type="button" class="btn btn-outline btn-sm" id="btn-fetch-wiki-img">🌐 Tìm ảnh thật (Online)</button>
+                <label class="btn btn-outline btn-sm file-btn">
+                  📷 Tải ảnh lên
+                  <input type="file" id="inp-img-file" accept="image/*" hidden />
+                </label>
+              </div>
+              <div class="url-row">
+                <input type="url" id="inp-img-url" class="input input-sm" placeholder="Hoặc dán link ảnh (https://...)" />
+                <button type="button" class="btn btn-outline btn-sm" id="btn-apply-img-url">Áp dụng</button>
+              </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg btn-block">💾 Lưu vào kho từ</button>
+          </form>
+
+          <!-- Live Card Preview -->
+          <div class="preview-column">
+            <div class="preview-label">👀 Xem trước thẻ Flashcard</div>
+            <div class="flashcard-preview card-surface" id="add-card-preview">
+              <div class="preview-topic-badge" id="prev-topic">🐾 Động vật</div>
+              <div class="preview-visual" id="prev-visual">✨</div>
+              <div class="preview-en" id="prev-en">English word</div>
+              <div class="preview-vi" id="prev-vi">Nghĩa tiếng Việt</div>
+              <div class="preview-ex" id="prev-ex"></div>
+            </div>
+
+            <div class="quick-stickers-box card-surface">
+              <div class="quick-stickers-title">Gợi ý biểu tượng nhanh:</div>
+              <div class="quick-stickers-row" id="quick-stickers-row"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bulk Import Panel -->
+        <div id="add-bulk-panel" class="card-surface bulk-panel" hidden>
+          <h3>📋 Nhập nhiều từ cùng lúc (Tự động tổng hợp theo chủ đề)</h3>
+          <p class="section-sub">Mỗi dòng 1 từ theo dạng <code>từ tiếng Anh - nghĩa tiếng Việt</code> (hoặc chỉ cần nhập <code>từ tiếng Anh</code> nếu là từ phổ biến lớp 3, hệ thống sẽ tự điền nghĩa &amp; chủ đề!).</p>
+          <div class="bulk-grid">
+            <div>
+              <textarea id="bulk-textarea" class="textarea" rows="8" placeholder="Ví dụ:&#10;lion - con sư tử&#10;strawberry - quả dâu tây&#10;ruler - cái thước kẻ&#10;sunny - trời nắng&#10;teacher&#10;bicycle"></textarea>
+              <div class="bulk-actions">
+                <button type="button" class="btn btn-secondary" id="btn-bulk-analyze">🔍 Phân tích &amp; Phân loại chủ đề</button>
+                <button type="button" class="btn btn-outline btn-sm" id="btn-bulk-sample">Chèn ví dụ mẫu</button>
+              </div>
+            </div>
+            <div>
+              <div class="bulk-preview-header">
+                <strong>Kết quả phân loại tự động:</strong>
+                <span id="bulk-count-label">0 từ</span>
+              </div>
+              <div id="bulk-preview-list" class="bulk-preview-list">
+                <div class="empty-hint">Bấm "Phân tích &amp; Phân loại chủ đề" để xem trước trước khi lưu.</div>
+              </div>
+              <button type="button" class="btn btn-primary btn-block" id="btn-bulk-save" disabled>
+                💾 Lưu tất cả vào kho từ
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- VIEW 4: PROGRESS & SCIENTIFIC METHOD -->
+      <section id="view-progress" class="view">
+        <div class="section-header">
+          <div>
+            <h2>🏆 Tiến độ học tập &amp; Dữ liệu</h2>
+            <p class="section-sub">Theo dõi trí nhớ dài hạn của bé qua hệ thống 5 hộp Leitner.</p>
+          </div>
+          <div class="section-actions">
+            <button class="btn btn-outline btn-sm" id="btn-export-data">⬇️ Xuất file sao lưu</button>
+            <label class="btn btn-outline btn-sm file-btn">
+              ⬆️ Nhập file sao lưu
+              <input type="file" id="inp-import-json" accept=".json" hidden />
+            </label>
+            <button class="btn btn-danger-outline btn-sm" id="btn-reset-demo">↺ Khôi phục bộ từ mẫu</button>
+          </div>
+        </div>
+
+        <!-- Leitner 5 Boxes Visualization -->
+        <div class="card-surface leitner-board">
+          <h3>📦 Hệ thống 5 Hộp Trí Nhớ (Leitner Spaced Repetition)</h3>
+          <p class="section-sub">Trả lời đúng → từ thăng lên hộp cao hơn và giãn thời gian ôn. Trả lời sai → quay về Hộp 1 để gặp lại ngay!</p>
+          <div class="leitner-boxes" id="leitner-boxes"></div>
+        </div>
+
+        <!-- Hardest Words -->
+        <div class="card-surface hard-words-card">
+          <h3>🎯 Những từ bé hay nhầm nhất (Nên ôn kỹ)</h3>
+          <div id="hard-words-list" class="hard-words-list"></div>
+        </div>
+
+        <!-- Scientific Learning Guide for Grade 3 -->
+        <div class="card-surface science-guide">
+          <h3>🔬 Nguyên lý khoa học giúp học sinh lớp 3 nhớ từ vựng sâu nhất</h3>
+          <div class="science-grid">
+            <div class="science-item">
+              <div class="science-num">1</div>
+              <div>
+                <h4>Mã hóa kép (Dual Coding Theory)</h4>
+                <p>Não trẻ em ghi nhớ qua 2 kênh song song: <strong>Hình ảnh + Âm thanh</strong> (hơn là chỉ nhìn chữ). Hãy bật loa đọc cả tốc độ chuẩn và chậm khi học thẻ mới.</p>
+              </div>
+            </div>
+            <div class="science-item">
+              <div class="science-num">2</div>
+              <div>
+                <h4>Tháp 3 bước: Nhận diện → Gợi nhớ → Chính tả</h4>
+                <p>Đừng bắt bé viết từ ngay khi mới gặp! Hãy đi từ <strong>Lật thẻ</strong> → <strong>Trắc nghiệm chọn từ</strong> → <strong>Nhìn hình viết từ (Dễ → Vừa → Khó)</strong>.</p>
+              </div>
+            </div>
+            <div class="science-item">
+              <div class="science-num">3</div>
+              <div>
+                <h4>Lặp lại ngắt quãng (Spaced Repetition)</h4>
+                <p>Ôn 10 phút mỗi ngày hiệu quả gấp 3 lần học dồn 1 tiếng cuối tuần. Hộp Leitner tự nhắc từ sắp quên vào đúng "điểm rơi trí nhớ".</p>
+              </div>
+            </div>
+            <div class="science-item">
+              <div class="science-num">4</div>
+              <div>
+                <h4>Học theo chủ đề &amp; Chia phiên nhỏ (Chunking)</h4>
+                <p>Trẻ 8–9 tuổi tập trung tốt nhất trong lượt <strong>5–8 từ</strong> cùng một chủ đề (Động vật, Trường học...) để tạo liên kết ngữ nghĩa tự nhiên.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Sticker Picker Modal -->
+  <div class="modal-backdrop" id="sticker-modal" hidden>
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>🎨 Chọn hình minh họa / Sticker</h3>
+        <button class="btn-close" id="btn-close-sticker" aria-label="Đóng">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="search" id="sticker-search" class="input" placeholder="Tìm nhanh (ví dụ: cat, apple, sun, car...)" />
+        <div class="sticker-grid" id="sticker-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Word Modal -->
+  <div class="modal-backdrop" id="edit-modal" hidden>
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>✏️ Chỉnh sửa thẻ từ</h3>
+        <button class="btn-close" id="btn-close-edit" aria-label="Đóng">✕</button>
+      </div>
+      <form id="form-edit-word" class="modal-body">
+        <input type="hidden" id="edit-id" />
+        <div class="form-group">
+          <label for="edit-en">Từ tiếng Anh</label>
+          <input type="text" id="edit-en" class="input" required />
+        </div>
+        <div class="form-group">
+          <label for="edit-vi">Nghĩa tiếng Việt</label>
+          <input type="text" id="edit-vi" class="input" required />
+        </div>
+        <div class="form-group">
+          <label for="edit-topic">Chủ đề</label>
+          <select id="edit-topic" class="input"></select>
+        </div>
+        <div class="form-group">
+          <label for="edit-example">Câu ví dụ</label>
+          <input type="text" id="edit-example" class="input" />
+        </div>
+        <div class="form-group">
+          <label for="edit-sticker">Biểu tượng hoặc Link ảnh</label>
+          <div class="input-with-btn">
+            <input type="text" id="edit-sticker" class="input" placeholder="Nhập emoji (🍎) hoặc link ảnh (https://...)" />
+            <label class="btn btn-outline btn-sm file-btn">
+              📷 Ảnh máy
+              <input type="file" id="edit-img-file" accept="image/*" hidden />
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" id="btn-cancel-edit">Hủy</button>
+          <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toast-container" aria-live="polite"></div>
+
+  <script defer src="dictionary.js"></script>
+  <script defer src="audio.js"></script>
+  <script defer src="storage.js"></script>
+  <script defer src="app.js"></script>
+</body>
+</html>
