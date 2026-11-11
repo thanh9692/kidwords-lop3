@@ -998,6 +998,33 @@ body {
 
 .input-with-btn { display: flex; gap: 8px; align-items: center; }
 .hint-text { font-size: 0.82rem; color: var(--primary-dark); font-weight: 700; }
+.spell-suggest-box {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: #FFF7ED;
+  border: 1.5px solid #FED7AA;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #9A3412;
+}
+.spell-suggest-box[hidden] { display: none; }
+.suggest-pill {
+  border: 1.5px solid #FDBA74;
+  background: #fff;
+  color: var(--primary-dark);
+  font-family: var(--font);
+  font-weight: 800;
+  font-size: 0.84rem;
+  padding: 3px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+.suggest-pill:hover { background: var(--primary-soft); border-color: var(--primary); }
 
 .illustration-tools { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
 .file-btn { position: relative; overflow: hidden; }

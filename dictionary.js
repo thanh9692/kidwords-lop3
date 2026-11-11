@@ -228,7 +228,16 @@
     sum: { vi: 'tổng / phép cộng', topic: 'colors_numbers', emoji: '➕', ex: 'Find the sum of two numbers.' },
     total: { vi: 'tổng cộng', topic: 'colors_numbers', emoji: '🔢', ex: 'What is the total?' },
     plus: { vi: 'cộng', topic: 'colors_numbers', emoji: '➕', ex: 'Two plus three is five.' },
-    minus: { vi: 'trừ', topic: 'colors_numbers', emoji: '➖', ex: 'Five minus two is three.' }
+    minus: { vi: 'trừ', topic: 'colors_numbers', emoji: '➖', ex: 'Five minus two is three.' },
+    today: { vi: 'hôm nay', topic: 'time', emoji: '📅', ex: 'Today is Monday.' },
+    tomorrow: { vi: 'ngày mai', topic: 'time', emoji: '📅', ex: 'See you tomorrow!' },
+    yesterday: { vi: 'hôm qua', topic: 'time', emoji: '📅', ex: 'Yesterday was sunny.' },
+    morning: { vi: 'buổi sáng', topic: 'time', emoji: '🌅', ex: 'Good morning!' },
+    afternoon: { vi: 'buổi chiều', topic: 'time', emoji: '🌇', ex: 'Good afternoon!' },
+    evening: { vi: 'buổi tối', topic: 'time', emoji: '🌆', ex: 'Good evening!' },
+    night: { vi: 'ban đêm', topic: 'time', emoji: '🌙', ex: 'Good night!' },
+    umbrella: { vi: 'cái ô / cây dù', topic: 'clothes', emoji: '☂️', ex: 'Take an umbrella when it rains.' },
+    calculator: { vi: 'máy tính bỏ túi', topic: 'school', emoji: '🧮', ex: 'Use a calculator to check.' }
   };
 
   // Starter deck (~36 essential Grade 3 words across topics)
@@ -445,11 +454,43 @@
     });
   }
 
+  function levenshtein(a, b) {
+    const m = a.length;
+    const n = b.length;
+    const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+    for (let i = 0; i <= m; i++) dp[i][0] = i;
+    for (let j = 0; j <= n; j++) dp[0][j] = j;
+    for (let i = 1; i <= m; i++) {
+      for (let j = 1; j <= n; j++) {
+        const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+        dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + cost);
+      }
+    }
+    return dp[m][n];
+  }
+
+  function findSpellingSuggestions(input, limit = 3) {
+    const w = normalizeText(input);
+    if (!w || w.length < 3 || GRADE3_DICT[w]) return [];
+    const maxDist = w.length <= 4 ? 1 : 2;
+    const candidates = [];
+    for (const key of Object.keys(GRADE3_DICT)) {
+      if (Math.abs(key.length - w.length) > maxDist) continue;
+      const dist = levenshtein(w, key);
+      if (dist > 0 && dist <= maxDist) {
+        candidates.push({ word: key, vi: GRADE3_DICT[key].vi, dist });
+      }
+    }
+    candidates.sort((a, b) => a.dist - b.dist || a.word.localeCompare(b.word));
+    return candidates.slice(0, limit);
+  }
+
   global.KidWordsDict = {
     DEFAULT_TOPICS,
     GRADE3_DICT,
     STICKER_CATALOG,
     autoClassifyWord,
+    findSpellingSuggestions,
     buildStarterCards,
     normalizeText
   };

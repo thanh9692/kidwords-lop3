@@ -306,6 +306,52 @@
     return '';
   }
 
+  async function fetchOnlineSpellSuggestion(word) {
+    try {
+      const resp = await fetch(
+        `https://en.wiktionary.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(word)}&srinfo=suggestion&srlimit=1&format=json&origin=*`
+      );
+      if (!resp.ok) return '';
+      const data = await resp.json();
+      const sug = (data && data.query && data.query.searchinfo && data.query.searchinfo.suggestion) || '';
+      const clean = sug.trim().toLowerCase();
+      if (!clean || clean === word.toLowerCase()) return '';
+      return clean;
+    } catch (_) {
+      return '';
+    }
+  }
+
+  function renderSpellingSuggestions(suggestions) {
+    const box = $('spell-suggest-box');
+    if (!box) return;
+    if (!suggestions || suggestions.length === 0) {
+      box.hidden = true;
+      box.innerHTML = '';
+      return;
+    }
+    box.hidden = false;
+    box.innerHTML =
+      `<span>🤔 Có phải bạn muốn viết:</span>` +
+      suggestions
+        .map(
+          (s) =>
+            `<button type="button" class="suggest-pill" data-word="${escapeHtml(s.word)}">${escapeHtml(s.word)}${s.vi ? ` (${escapeHtml(s.vi)})` : ''}</button>`
+        )
+        .join('');
+    box.querySelectorAll('.suggest-pill').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        $('inp-en').value = btn.dataset.word;
+        ui.userEditedVi = false;
+        ui.userEditedTopic = false;
+        ui.userEditedSticker = false;
+        ui.userEditedExample = false;
+        renderSpellingSuggestions([]);
+        runAutoDetect(true, true);
+      });
+    });
+  }
+
   function runAutoDetect(allowOnlineTranslate = true, clearUnmatchedVi = true) {
     if (ui.translateTimer) {
       clearTimeout(ui.translateTimer);
@@ -345,22 +391,44 @@
     } else {
       $('auto-detect-status').textContent = 'Gõ từ tiếng Anh để hệ thống tự tìm chủ đề, nghĩa & hình minh họa.';
     }
+
+    const localSuggestions = res.matched ? [] : Dict.findSpellingSuggestions(trimmedEn);
+    if (allowOnlineTranslate || res.matched || localSuggestions.length > 0) {
+      renderSpellingSuggestions(localSuggestions);
+    }
+
     updateAddPreview();
 
-    // Online fallback translation for words not yet in built-in Grade 3 dictionary
-    if (allowOnlineTranslate && !res.matched && !ui.userEditedVi && trimmedEn.length >= 2) {
+    // Online fallback translation + spell suggestion for words not yet in built-in Grade 3 dictionary
+    if (allowOnlineTranslate && !res.matched && trimmedEn.length >= 2) {
       const requestedWord = trimmedEn;
       ui.translateTimer = setTimeout(async () => {
-        if ($('inp-en').value.trim() !== requestedWord || ui.userEditedVi) return;
-        $('auto-detect-status').textContent = '⏳ Đang tra nghĩa tiếng Việt...';
-        const translatedVi = await translateEnToViOnline(requestedWord);
-        if ($('inp-en').value.trim() !== requestedWord || ui.userEditedVi) return;
-        if (translatedVi) {
-          $('inp-vi').value = translatedVi;
-          runAutoDetect(false, false);
-        } else {
-          const fallbackTopic = getTopicMeta($('inp-topic').value);
-          $('auto-detect-status').textContent = `🤖 Tự phân loại vào chủ đề: ${fallbackTopic.icon} ${fallbackTopic.nameVi} (hãy nhập nghĩa tiếng Việt)`;
+        if ($('inp-en').value.trim() !== requestedWord) return;
+        const shouldTranslate = !ui.userEditedVi;
+        if (shouldTranslate) {
+          $('auto-detect-status').textContent = '⏳ Đang tra nghĩa tiếng Việt...';
+        }
+        const [translatedVi, onlineSug] = await Promise.all([
+          shouldTranslate ? translateEnToViOnline(requestedWord) : Promise.resolve(''),
+          localSuggestions.length === 0 && requestedWord.length >= 3
+            ? fetchOnlineSpellSuggestion(requestedWord)
+            : Promise.resolve('')
+        ]);
+
+        if ($('inp-en').value.trim() !== requestedWord) return;
+
+        if (onlineSug && !localSuggestions.some((s) => s.word === onlineSug)) {
+          renderSpellingSuggestions([...localSuggestions, { word: onlineSug, vi: '' }]);
+        }
+
+        if (shouldTranslate && !ui.userEditedVi) {
+          if (translatedVi) {
+            $('inp-vi').value = translatedVi;
+            runAutoDetect(false, false);
+          } else {
+            const fallbackTopic = getTopicMeta($('inp-topic').value);
+            $('auto-detect-status').textContent = `🤖 Tự phân loại vào chủ đề: ${fallbackTopic.icon} ${fallbackTopic.nameVi} (hãy nhập nghĩa tiếng Việt)`;
+          }
         }
       }, 320);
     }
@@ -1437,6 +1505,7 @@
       ui.draftImageType = 'emoji';
       ui.draftImageValue = '✨';
       $('custom-topic-wrap').hidden = true;
+      renderSpellingSuggestions([]);
       populateTopicSelect($('inp-topic'), true);
       updateAddPreview();
       renderHeaderStats();
